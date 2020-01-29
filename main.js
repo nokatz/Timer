@@ -4,7 +4,7 @@ let startBtn = document.getElementById('start-btn');
 
 
 let timer = new Timer(body, 300, 140); 
-startBtn.focus();
+// startBtn.focus();
 
 startBtn.addEventListener('click', (e) => {
 	
