@@ -13,15 +13,16 @@ function Timer(parent, width, height){
 	
 	
 	// Alarm stuff
-	// this.alarmStates = {OFF: 'off', SETTING: 'setting', SET: 'set', RING: 'ring'};
+	this.alarmStates = {OFF: 'off', SETTING: 'setting', SET: 'set', RING: 'ring'};
+	this.alarmState = this.alarmStates.OFF;
+	
 	this.alarmTime = null;
 	
 	this.alarm = new Audio();
 	this.alarm.src = "assets/snd/alarm.wav";
 	this.alarm.volume = 0.4;
 	
-	this.alarmPlaying = false;
-	this.settingAlarm = false;
+	// this.settingAlarm = false;
 
 	this.iconHeight = 16;
 	
@@ -41,12 +42,12 @@ function Timer(parent, width, height){
 		
 		if(mouseX >= this.bb.x && mouseX <= this.bb.x + this.bb.w && mouseY >= this.bb.y && mouseY <= this.bb.y + this.bb.h){
 			
-			if(!this.alarmPlaying){
+			if(this.alarmState !== this.alarmStates.RING){
 				this.setAlarm();			
 			} else {
 				this.alarm.pause();
 				this.alarm.currentTime = 0;
-				this.alarmPlaying = false;
+				this.alarmState = this.alarmStates.OFF;
 			}			
 		}
 	});	
@@ -105,7 +106,7 @@ function Timer(parent, width, height){
 			
 			case 13: 
 			this.alarmTime = new Date(0, 0, 0, this.setH, this.setM, this.setS, 0);
-			this.settingAlarm = false;
+			this.alarmState = this.alarmStates.SET;
 			break;
 		}
 
@@ -120,7 +121,7 @@ function Timer(parent, width, height){
 
 Timer.prototype.setAlarm = function(){
 
-	this.settingAlarm = true;
+	this.alarmState = this.alarmStates.SETTING;
 	this.draw(0, 0, 0);
 
 }
@@ -144,14 +145,17 @@ Timer.prototype.tick = function(){
 
 	this.time = new Date(this.time);
 	
-	if(
-		this.time.getSeconds() === this.alarmTime.getSeconds() 
-		&& this.time.getMinutes() === this.alarmTime.getMinutes() 
-		&& this.time.getUTCHours() === this.alarmTime.getHours()
-	){
-		this.alarmPlaying = true;
-		this.alarm.play();
-		this.stop();
+	if(this.alarmState === this.alarmStates.SET){
+		if(
+			this.time.getSeconds() === this.alarmTime.getSeconds() 
+			&& this.time.getMinutes() === this.alarmTime.getMinutes() 
+			&& this.time.getUTCHours() === this.alarmTime.getHours()
+		){
+			// this.alarmPlaying = true;
+			this.alarmState = this.alarmStates.RING;
+			this.alarm.play();
+			this.stop();
+		}
 	}
 	
 	this.draw(this.time.getUTCHours(), this.time.getMinutes(), this.time.getSeconds());
@@ -184,7 +188,8 @@ Timer.prototype.draw = function(h, m, s){
 	this.ctx.textBaseline = "middle";
 
 	// alarm selecting stuff
-	if(this.settingAlarm){
+	// if(this.settingAlarm){
+	if(this.alarmState === this.alarmStates.SETTING){
 		this.ctx.fillStyle = "blue";
 		let txt0 = this.ctx.measureText(h + ':').width;
 		let txt1 = this.ctx.measureText(h + ':' + m + ':').width;
@@ -201,6 +206,7 @@ Timer.prototype.draw = function(h, m, s){
 		}
 	}
 	// end of alarm selecting stuff
+
 	
 	this.ctx.fillStyle = "white";
 	
@@ -211,7 +217,28 @@ Timer.prototype.draw = function(h, m, s){
 	);
 	
 	// bell icon
-	// this.ctx.drawImage(this.bell, 10, 14, 20, 16);
-	this.ctx.drawImage(this.bell, this.bb.x, this.bb.y, this.bb.w, this.bb.h);
+	this.ctx.drawImage(this.bell, this.bb.x, this.bb.y, this.bb.w, this.bb.h
+);
+
+	// small alarm numbers
+	if(this.alarmState === this.alarmStates.SET){
+
+		this.ctx.font = this.bb.h + "px " + "Helvetica";
+		
+		this.ctx.textAlign = "left";
+		this.ctx.textBaseline = "middle";
+		
+		this.ctx.fillText(
+			this.alarmTime.getHours() + ':' + 
+			this.alarmTime.getMinutes() + ':' + 
+			this.alarmTime.getSeconds(), 
+			this.bb.x + this.bb.w + 10, this.bb.y + this.bb.h / 2
+		);
+			
+	}
 
 }
+
+
+
+
